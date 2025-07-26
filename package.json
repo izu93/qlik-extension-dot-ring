@@ -1,0 +1,31 @@
+{
+  "name": "qlik-extension-compare",
+  "version": "1.0.0",
+  "description": "Qlik Extension for comparison analysis",
+  "main": "src/index.js",
+  "scripts": {
+    "build": "nebula build",
+    "dev": "nebula serve",
+    "test": "playwright test"
+  },
+  "keywords": [
+    "qlik",
+    "extension",
+    "compare",
+    "nebula"
+  ],
+  "author": "izu93",
+  "license": "MIT",
+  "devDependencies": {
+    "@nebula.js/cli": "^4.13.0",
+    "@playwright/test": "^1.40.0",
+    "eslint": "^8.50.0"
+  },
+  "dependencies": {
+    "@nebula.js/stardust": "^4.13.0"
+  },
+  "nebula": {
+    "name": "qlik-extension-compare",
+    "type": "extension"
+  }
+} 

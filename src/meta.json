@@ -1,0 +1,14 @@
+{
+  "name": "qlik-extension-compare",
+  "description": "Qlik Extension for comparison analysis",
+  "type": "visualization",
+  "version": "1.0.0",
+  "author": "izu93",
+  "bundle": {
+    "id": "qlik-extension-compare",
+    "name": "Qlik Extension Compare",
+    "description": "Extension for comparison analysis",
+    "version": "1.0.0",
+    "qext": {}
+  }
+} 
