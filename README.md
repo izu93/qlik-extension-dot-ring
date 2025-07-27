@@ -1,14 +1,14 @@
-# Qlik Extension Compare
+# Qlik Extension Dot Ring
 
-A Qlik Sense extension for comparison analysis built with Nebula.js.
+A Qlik Sense extension built with Nebula.js.
 
 ## Installation
 
 ### Step 1: Clone & Install
 
 ```bash
-git clone https://github.com/izu93/qlik-extension-compare.git
-cd qlik-extension-compare
+git clone https://github.com/izu93/qlik-extension-dot-ring.git
+cd qlik-extension-dot-ring
 npm install
 ```
 
@@ -31,7 +31,7 @@ npm run dev
 ## Project Structure
 
 ```
-qlik-extension-compare/
+qlik-extension-dot-ring/
 ├── package.json              # Nebula.js dependencies & build scripts
 ├── playwright.config.js      # Testing configuration
 ├── src/
