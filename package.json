@@ -1,31 +1,51 @@
 {
   "name": "qlik-extension-compare",
-  "version": "1.0.0",
-  "description": "Qlik Extension for comparison analysis",
-  "main": "src/index.js",
-  "scripts": {
-    "build": "nebula build",
-    "dev": "nebula serve",
-    "test": "playwright test"
+  "version": "0.1.0",
+  "description": "False Churn Analysis Extension for comparing renewal and new opportunities",
+  "license": "MIT",
+  "author": {
+    "name": "izu93",
+    "email": "izu93@domain.com"
   },
   "keywords": [
     "qlik",
-    "extension",
+    "nebula",
+    "stardust",
     "compare",
-    "nebula"
+    "churn"
   ],
-  "author": "izu93",
-  "license": "MIT",
+  "files": [
+    "dist",
+    "assets/preview.png"
+  ],
+  "engines": {
+    "node": ">=18.10.0"
+  },
+  "main": "dist/qlik-extension-compare.js",
+  "module": "dist/qlik-extension-compare.esm.js",
+  "scripts": {
+    "build": "nebula build",
+    "lint": "eslint src",
+    "start": "nebula serve",
+    "sense": "nebula sense --meta src/meta.json",
+    "test:e2e": "playwright test",
+    "test:e2e:report": "playwright show-report test/integration/test-report"
+  },
   "devDependencies": {
-    "@nebula.js/cli": "^4.13.0",
-    "@playwright/test": "^1.40.0",
-    "eslint": "^8.50.0"
+    "@nebula.js/cli": "5.15.0",
+    "@nebula.js/cli-build": "5.15.0",
+    "@nebula.js/cli-sense": "5.15.0",
+    "@nebula.js/cli-serve": "5.15.0",
+    "@playwright/test": "^1.28.1",
+    "eslint": "7.27.0",
+    "eslint-config-airbnb-base": "14.2.1",
+    "eslint-plugin-import": "2.23.4",
+    "eslint-plugin-mocha": "9.0.0"
+  },
+  "peerDependencies": {
+    "@nebula.js/stardust": ">=5.0.0"
   },
   "dependencies": {
-    "@nebula.js/stardust": "^4.13.0"
-  },
-  "nebula": {
-    "name": "qlik-extension-compare",
-    "type": "extension"
+    "d3": "^7.9.0"
   }
-} 
+}
