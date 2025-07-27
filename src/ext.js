@@ -54,6 +54,40 @@ export default {
         }
       },
 
+      // Bubble Configuration
+      bubbleSettings: {
+        type: "items",
+        label: "Bubble Settings",
+        items: {
+          bubbleSizeHeader: {
+            type: "string",
+            component: "text",
+            label: "*Adjust bubble sizes for better visibility of data points*",
+            style: "font-style: italic; color: #666; margin-bottom: 10px;"
+          },
+          bubbleSizeMin: {
+            type: "number",
+            component: "slider",
+            label: "Minimum Bubble Size",
+            ref: "props.bubbleSize.min",
+            min: 1,
+            max: 10,
+            step: 0.5,
+            defaultValue: 3
+          },
+          bubbleSizeMax: {
+            type: "number", 
+            component: "slider",
+            label: "Maximum Bubble Size",
+            ref: "props.bubbleSize.max",
+            min: 5,
+            max: 25,
+            step: 1,
+            defaultValue: 12
+          }
+        }
+      },
+
       // Standard appearance settings
       appearance: {
         uses: "settings",

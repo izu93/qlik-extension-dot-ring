@@ -13,8 +13,8 @@ export default {
     // Initial data fetch configuration
     qInitialDataFetch: [
       {
-        qWidth: 40, // Number of columns to fetch
-        qHeight: 100, // Number of rows to fetch
+        qWidth: 3, // Number of columns to fetch
+        qHeight: 3000, // Number of rows to fetch - increased for full dataset
       },
     ],
   },
@@ -23,8 +23,8 @@ export default {
   props: {
     // Visual settings - updated for better visibility
     bubbleSize: {
-      min: 3,    // Increased from 2
-      max: 8     // Increased from 8 to match new sizes
+      min: 3,    // User configurable minimum bubble size
+      max: 12    // User configurable maximum bubble size
     },
     
     // Ring settings

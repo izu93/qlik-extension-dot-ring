@@ -305,10 +305,20 @@ export default function supernova() {
             const dotX = centerX + Math.cos(baseAngle) * adjustedRadius;
             const dotY = centerY + Math.sin(baseAngle) * adjustedRadius;
             
-            // Better sized dots - larger but still efficient for many dots
+            // Better sized dots - use dynamic bubble size settings from properties panel
             const maxATR = Math.max(...processedData.map(d => d.atrAmount));
-            const minDotSize = 3;   // Increased from 1.5
-            const maxDotSize = 8;   // Increased from 4
+            const minDotSize = layout.props?.bubbleSize?.min || 3;   // Read from user settings
+            const maxDotSize = layout.props?.bubbleSize?.max || 12;  // Read from user settings
+            
+            // Debug: Log bubble size settings (only once per render)
+            if (levelIndex === 0 && accountIndex === 0) {
+              console.log('🎯 Bubble Size Settings:', {
+                min: minDotSize,
+                max: maxDotSize,
+                from: 'layout.props.bubbleSize',
+                maxATR: maxATR
+              });
+            }
             const dotSize = maxATR > 0 && account.atrAmount > 0 ? 
               minDotSize + ((account.atrAmount / maxATR) * (maxDotSize - minDotSize)) : 
               minDotSize;
