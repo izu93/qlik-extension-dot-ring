@@ -150,21 +150,24 @@ export default function supernova() {
                 <div><strong>Size:</strong> ${atrFieldName}</div>
               </div>
 
-              <!-- Legend -->
-              <div style="
-                position: absolute;
-                top: 20px;
-                right: 20px;
-                background: rgba(255,255,255,0.95);
-                padding: 12px;
-                border-radius: 6px;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-                font-size: 11px;
-                max-width: 180px;
-              " id="legend-container">
-                <div style="font-weight: bold; margin-bottom: 6px;">${confidenceFieldName}</div>
-                <div id="legend-items"></div>
-              </div>
+                             <!-- Legend -->
+               <div style="
+                 position: absolute;
+                 top: 20px;
+                 right: 20px;
+                 background: rgba(255,255,255,0.95);
+                 padding: 12px;
+                 border-radius: 6px;
+                 box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                 font-size: 11px;
+                 max-width: 180px;
+               " id="legend-container">
+                 <div style="font-weight: bold; margin-bottom: 4px;">${confidenceFieldName}</div>
+                 <div style="font-size: 8px; color: #999; margin-bottom: 8px; font-style: italic;">
+                   *Click to filter by confidence level*
+                 </div>
+                 <div id="legend-items"></div>
+               </div>
             </div>
           </div>
         `;
@@ -481,29 +484,107 @@ export default function supernova() {
         d3.select('#cluster-tooltip').remove();
       }
 
-      function updateLegend(ringLevels, getColor, groupedData) {
-        const legendContainer = document.getElementById('legend-items');
-        if (!legendContainer) return;
+             function updateLegend(ringLevels, getColor, groupedData) {
+         const legendContainer = document.getElementById('legend-items');
+         if (!legendContainer) return;
 
-        legendContainer.innerHTML = ringLevels.map((level) => {
-          const color = getColor(level);
-          const count = groupedData[level]?.length || 0;
-          return `
-            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px; justify-content: space-between;">
-              <div style="display: flex; align-items: center; gap: 6px;">
-                <div style="
-                  width: 10px; 
-                  height: 10px; 
-                  border-radius: 50%; 
-                  background: ${color};
-                "></div>
-                <span style="font-size: 10px;">${level}</span>
-              </div>
-              <span style="font-size: 9px; color: #666; font-weight: bold;">${count}</span>
-            </div>
-          `;
-        }).join('');
-      }
+         // Clear existing content
+         legendContainer.innerHTML = '';
+
+         ringLevels.forEach((level) => {
+           const color = getColor(level);
+           const count = groupedData[level]?.length || 0;
+           
+           // Check if this level is selected in Qlik
+           const hypercube = layout?.qHyperCube;
+           let isSelected = false;
+           
+           if (hypercube?.qDataPages?.[0]?.qMatrix) {
+             // Check if any items with this confidence classification are selected
+             isSelected = hypercube.qDataPages[0].qMatrix.some(row => 
+               row[1]?.qText === level && row[1]?.qState === 'S'
+             );
+           }
+           
+           // Create legend item div
+           const legendItem = document.createElement('div');
+           legendItem.style.cssText = `
+             display: flex; 
+             align-items: center; 
+             gap: 6px; 
+             margin-bottom: 4px; 
+             justify-content: space-between;
+             padding: 4px 6px;
+             border-radius: 4px;
+             cursor: pointer;
+             transition: all 0.2s ease;
+             background: ${isSelected ? 'rgba(51, 51, 51, 0.1)' : 'transparent'};
+             border: ${isSelected ? '1px solid #333' : '1px solid transparent'};
+           `;
+           
+           // Add hover effects
+           legendItem.addEventListener('mouseenter', function() {
+             if (!isSelected) {
+               this.style.background = 'rgba(0, 0, 0, 0.05)';
+             }
+           });
+           
+           legendItem.addEventListener('mouseleave', function() {
+             if (!isSelected) {
+               this.style.background = 'transparent';
+             }
+           });
+           
+           legendItem.innerHTML = `
+             <div style="display: flex; align-items: center; gap: 6px;">
+               <div style="
+                 width: 10px; 
+                 height: 10px; 
+                 border-radius: 50%; 
+                 background: ${color};
+               "></div>
+               <span style="font-size: 10px; font-weight: ${isSelected ? 'bold' : 'normal'};">${level}</span>
+             </div>
+             <span style="font-size: 9px; color: #666; font-weight: bold;">${count}</span>
+           `;
+           
+           // Add click handler for selection
+           legendItem.addEventListener('click', async function(event) {
+             console.log('🎯 Legend clicked:', level);
+             
+             try {
+               // Check if we have confidence classification dimension (second dimension)
+               if (layout?.qHyperCube?.qDimensionInfo?.[1]) {
+                 // Find the element number for this confidence level in the hypercube
+                 const hypercube = layout.qHyperCube;
+                 const confidenceRow = hypercube.qDataPages[0].qMatrix.find(row => 
+                   row[1]?.qText === level
+                 );
+                 
+                 if (confidenceRow && confidenceRow[1]?.qElemNumber !== undefined) {
+                   const elemNumber = confidenceRow[1].qElemNumber;
+                   
+                   // Use Ctrl+click for multiple selections, regular click for single selection
+                   const toggleMode = event.ctrlKey || event.metaKey;
+                   
+                   // Make selection using the model API on dimension 1 (confidence classification)
+                   await model.selectHyperCubeValues('/qHyperCubeDef', 1, [elemNumber], toggleMode);
+                   
+                   console.log(`✅ Legend selection made: "${level}" ${toggleMode ? '(Multi-select)' : '(Single select)'}`);
+                 } else {
+                   console.warn('⚠️ Element number not found for confidence level:', level);
+                 }
+               } else {
+                 console.warn('⚠️ No confidence classification dimension found for selection');
+               }
+             } catch (error) {
+               console.error('❌ Legend selection failed:', error);
+             }
+           });
+           
+           legendContainer.appendChild(legendItem);
+         });
+       }
 
       return {};
     },
