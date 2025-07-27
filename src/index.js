@@ -198,7 +198,10 @@ export default function supernova() {
         const ringWidth = ringLevels.length > 1 ? 
           (maxRadius - minRadius) / (ringLevels.length - 1) : 0;
 
-        // Render rings and dots
+        // Animation sequence: First animate rings, then dots
+        let allDots = []; // Store all dots for later animation
+
+        // Phase 1: Animate rings appearing
         ringLevels.forEach((level, levelIndex) => {
           const accounts = groupedData[level];
           const ringRadius = ringLevels.length === 1 ? 
@@ -206,17 +209,25 @@ export default function supernova() {
             minRadius + (levelIndex * ringWidth);
           const color = getColor(level);
 
-          // Draw ring circle
-          svg.append('circle')
+          // Draw ring circle with animation
+          const ring = svg.append('circle')
             .attr('cx', centerX)
             .attr('cy', centerY)
-            .attr('r', ringRadius)
+            .attr('r', 0) // Start with radius 0
             .attr('fill', 'none')
             .attr('stroke', color)
             .attr('stroke-width', 2)
+            .attr('stroke-opacity', 0); // Start invisible
+
+          // Animate ring appearing
+          ring.transition()
+            .delay(levelIndex * 200) // Stagger ring animations
+            .duration(800)
+            .ease(d3.easeElasticOut.amplitude(1).period(0.5))
+            .attr('r', ringRadius)
             .attr('stroke-opacity', 0.4);
 
-          // Position dots - optimized for many dots with better visible size
+          // Prepare dots for this ring (but don't render yet)
           accounts.forEach((account, accountIndex) => {
             // Add spacing optimization to prevent overlap with many dots
             const baseAngle = (accountIndex / accounts.length) * 2 * Math.PI;
@@ -238,43 +249,72 @@ export default function supernova() {
               minDotSize + ((account.atrAmount / maxATR) * (maxDotSize - minDotSize)) : 
               minDotSize;
 
-            // Create more visible dot
+            // Store dot info for later animation
+            allDots.push({
+              x: dotX,
+              y: dotY,
+              size: dotSize,
+              color: color,
+              account: account,
+              levelIndex: levelIndex,
+              accountIndex: accountIndex
+            });
+          });
+        });
+
+        // Phase 2: Animate dots appearing after rings are done
+        const ringsAnimationDuration = (ringLevels.length * 200) + 800; // Total time for rings
+        
+        setTimeout(() => {
+          // Shuffle dots for more interesting animation pattern
+          const shuffledDots = [...allDots].sort(() => Math.random() - 0.5);
+          
+          shuffledDots.forEach((dotInfo, globalIndex) => {
+            // Create dot (initially invisible and small)
             const dot = svg.append('circle')
-              .attr('cx', dotX)
-              .attr('cy', dotY)
-              .attr('r', dotSize)
-              .attr('fill', color)
+              .attr('cx', dotInfo.x)
+              .attr('cy', dotInfo.y)
+              .attr('r', 0) // Start with size 0
+              .attr('fill', dotInfo.color)
               .attr('stroke', 'white')
-              .attr('stroke-width', 1)    // Increased from 0.5
+              .attr('stroke-width', 1)
               .style('cursor', 'pointer')
+              .style('opacity', 0); // Start invisible
+
+            // Animate dot appearing with elastic bounce
+            dot.transition()
+              .delay(globalIndex * 15) // Fast staggered appearance
+              .duration(500)
+              .ease(d3.easeBackOut.overshoot(1.7))
+              .attr('r', dotInfo.size)
               .style('opacity', 0.9);
 
-            // Add hover effects
+            // Add hover effects (same as before)
             dot.on('mouseover', function(event) {
               d3.select(this)
                 .transition()
                 .duration(150)
-                .attr('r', dotSize * 2)   // Reduced from 2.5x to 2x 
+                .attr('r', dotInfo.size * 2)
                 .style('opacity', 1);
 
-              showTooltip(event, account, accountFieldName, confidenceFieldName, atrFieldName);
+              showTooltip(event, dotInfo.account, accountFieldName, confidenceFieldName, atrFieldName);
             })
             .on('mouseout', function() {
               d3.select(this)
                 .transition()
                 .duration(150)
-                .attr('r', dotSize)
+                .attr('r', dotInfo.size)
                 .style('opacity', 0.9);
 
               hideTooltip();
             })
             .on('click', function() {
-              console.log('Clicked account:', account);
+              console.log('Clicked account:', dotInfo.account);
             });
           });
-        });
+        }, ringsAnimationDuration + 200); // Start dots slightly after rings finish
 
-        // Update legend
+        // Update legend (no animation needed)
         updateLegend(ringLevels, getColor, groupedData);
       }
 
