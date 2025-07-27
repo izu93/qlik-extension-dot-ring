@@ -27,6 +27,9 @@ export default {
       max: 8     // Increased from 8 to match new sizes
     },
     
+    // Ring settings
+    sortOrder: "default",
+    
     // Display settings
     showLegend: true,
     showMetrics: true

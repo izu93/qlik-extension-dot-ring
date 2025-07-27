@@ -87,6 +87,14 @@ export default function supernova() {
 
         console.log('Grouped data:', groupedData);
 
+        // Get sort order from properties
+        const sortOrder = layout.props?.sortOrder || "default";
+        
+        // Sort ring levels based on user selection
+        const sortedRingLevels = sortRingLevels(Object.keys(groupedData), groupedData, sortOrder);
+        
+        console.log('Sort order:', sortOrder, 'Sorted levels:', sortedRingLevels);
+
         // Get field names for display
         const accountFieldName = (dimensionCount > 0) ? 
           dimensionInfo[0].qFallbackTitle : 'Account Name';
@@ -158,11 +166,68 @@ export default function supernova() {
         `;
 
         // Render the visualization
-        renderCluster(processedData, groupedData, accountFieldName, confidenceFieldName, atrFieldName);
+        renderCluster(processedData, groupedData, sortedRingLevels, accountFieldName, confidenceFieldName, atrFieldName);
 
       }, [layout]);
 
-      function renderCluster(processedData, groupedData, accountFieldName, confidenceFieldName, atrFieldName) {
+      // Function to sort ring levels based on user preference
+      function sortRingLevels(ringLevels, groupedData, sortOrder) {
+        switch (sortOrder) {
+          case "alphabetical":
+            return ringLevels.sort((a, b) => a.localeCompare(b));
+            
+          case "reverse-alphabetical":
+            return ringLevels.sort((a, b) => b.localeCompare(a));
+            
+          case "confidence-high-to-low":
+            // Define confidence hierarchy
+            const confidenceOrder = {
+              'High Confidence False Churn': 4,
+              'Moderate Confidence': 3,
+              'Low Confidence': 2,
+              'Unlikely False Churn': 1
+            };
+            return ringLevels.sort((a, b) => {
+              const aOrder = confidenceOrder[a] || 0;
+              const bOrder = confidenceOrder[b] || 0;
+              return bOrder - aOrder; // High to low
+            });
+            
+          case "confidence-low-to-high":
+            // Define confidence hierarchy
+            const confidenceOrderAsc = {
+              'High Confidence False Churn': 4,
+              'Moderate Confidence': 3,
+              'Low Confidence': 2,
+              'Unlikely False Churn': 1
+            };
+            return ringLevels.sort((a, b) => {
+              const aOrder = confidenceOrderAsc[a] || 0;
+              const bOrder = confidenceOrderAsc[b] || 0;
+              return aOrder - bOrder; // Low to high
+            });
+            
+          case "count-high-to-low":
+            return ringLevels.sort((a, b) => {
+              const aCount = groupedData[a]?.length || 0;
+              const bCount = groupedData[b]?.length || 0;
+              return bCount - aCount;
+            });
+            
+          case "count-low-to-high":
+            return ringLevels.sort((a, b) => {
+              const aCount = groupedData[a]?.length || 0;
+              const bCount = groupedData[b]?.length || 0;
+              return aCount - bCount;
+            });
+            
+          case "default":
+          default:
+            return ringLevels; // Keep original order
+        }
+      }
+
+      function renderCluster(processedData, groupedData, ringLevels, accountFieldName, confidenceFieldName, atrFieldName) {
         const svg = d3.select('#cluster-svg');
         svg.selectAll('*').remove();
 
@@ -173,7 +238,6 @@ export default function supernova() {
 
         svg.attr('viewBox', `0 0 ${width} ${height}`);
 
-        const ringLevels = Object.keys(groupedData);
         const colorScale = d3.scaleOrdinal()
           .domain(ringLevels)
           .range([
