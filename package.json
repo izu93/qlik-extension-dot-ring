@@ -1,7 +1,7 @@
 {
-  "name": "qlik-extension-compare",
+  "name": "qlik-extension-dot-ring",
   "version": "0.1.0",
-  "description": "False Churn Analysis Extension for comparing renewal and new opportunities",
+  "description": "Interactive Dot Ring Visualization Extension for Qlik Sense",
   "license": "MIT",
   "author": {
     "name": "izu93",
@@ -11,8 +11,9 @@
     "qlik",
     "nebula",
     "stardust",
-    "compare",
-    "churn"
+    "visualization",
+    "dot-ring",
+    "interactive"
   ],
   "files": [
     "dist",
@@ -21,8 +22,8 @@
   "engines": {
     "node": ">=18.10.0"
   },
-  "main": "dist/qlik-extension-compare.js",
-  "module": "dist/qlik-extension-compare.esm.js",
+  "main": "dist/qlik-extension-dot-ring.js",
+  "module": "dist/qlik-extension-dot-ring.esm.js",
   "scripts": {
     "build": "nebula build",
     "lint": "eslint src",
