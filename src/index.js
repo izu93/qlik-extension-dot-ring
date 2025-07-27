@@ -2,6 +2,8 @@ import {
   useElement,
   useLayout,
   useEffect,
+  useApp,
+  useModel,
 } from "@nebula.js/stardust";
 import * as d3 from "d3";
 import objectProperties from "./object-properties";
@@ -15,9 +17,11 @@ export default function supernova() {
       data: dataConfiguration,
     },
     ext: extensionDefinition,
-    component() {
-      const element = useElement();
-      const layout = useLayout();
+            component() {
+          const element = useElement();
+          const layout = useLayout();
+          const app = useApp();
+          const model = useModel();
 
       useEffect(() => {
         // Get data from hypercube
@@ -344,16 +348,30 @@ export default function supernova() {
           const shuffledDots = [...allDots].sort(() => Math.random() - 0.5);
           
           shuffledDots.forEach((dotInfo, globalIndex) => {
+            // Check if this account is selected in Qlik
+            const accountName = dotInfo.account.accountName;
+            const hypercube = layout?.qHyperCube;
+            let isSelected = false;
+            
+            // Find the row in the hypercube data that matches this account
+            if (hypercube?.qDataPages?.[0]?.qMatrix) {
+              const matchingRow = hypercube.qDataPages[0].qMatrix.find(row => 
+                row[0]?.qText === accountName
+              );
+              isSelected = matchingRow?.[0]?.qState === 'S'; // 'S' = Selected in Qlik
+            }
+            
             // Create dot (initially invisible and small)
             const dot = svg.append('circle')
               .attr('cx', dotInfo.x)
               .attr('cy', dotInfo.y)
               .attr('r', 0) // Start with size 0
               .attr('fill', dotInfo.color)
-              .attr('stroke', 'white')
-              .attr('stroke-width', 1)
+              .attr('stroke', isSelected ? '#FFD700' : 'white') // Gold border for selected
+              .attr('stroke-width', isSelected ? 3 : 1) // Thicker border for selected
               .style('cursor', 'pointer')
-              .style('opacity', 0); // Start invisible
+              .style('opacity', 0) // Start invisible
+              .classed('selected-dot', isSelected);
 
             // Animate dot appearing with elastic bounce
             dot.transition()
@@ -382,8 +400,41 @@ export default function supernova() {
 
               hideTooltip();
             })
-            .on('click', function() {
+            .on('click', async function(event) {
               console.log('Clicked account:', dotInfo.account);
+              
+              try {
+                // Make selection using the model's selectHyperCubeValues method
+                if (layout?.qHyperCube?.qDimensionInfo?.[0]) {
+                  const accountName = dotInfo.account.accountName;
+                  
+                  console.log(`🎯 Making selection: "${accountName}"`);
+                  
+                  // Find the element number for this account in the hypercube
+                  const hypercube = layout.qHyperCube;
+                  const accountRow = hypercube.qDataPages[0].qMatrix.find(row => 
+                    row[0]?.qText === accountName
+                  );
+                  
+                  if (accountRow && accountRow[0]?.qElemNumber !== undefined) {
+                    const elemNumber = accountRow[0].qElemNumber;
+                    
+                    // Use Ctrl+click for multiple selections, regular click for single selection
+                    const toggleMode = event.ctrlKey || event.metaKey;
+                    
+                    // Make selection using the model API
+                    await model.selectHyperCubeValues('/qHyperCubeDef', 0, [elemNumber], toggleMode);
+                    
+                    console.log(`✅ Selection made: ${toggleMode ? 'Multi-select' : 'Single select'}`);
+                  } else {
+                    console.warn('⚠️ Element number not found for account:', accountName);
+                  }
+                } else {
+                  console.warn('⚠️ No dimension found for selection');
+                }
+              } catch (error) {
+                console.error('❌ Selection failed:', error);
+              }
             });
           });
         }, ringsAnimationDuration + 200); // Start dots slightly after rings finish
@@ -412,6 +463,9 @@ export default function supernova() {
           <div style="font-weight: bold;">${account.accountName}</div>
           <div>${confidenceFieldName}: ${account.confidenceClass}</div>
           <div>${atrFieldName}: ${account.atrAmount > 0 ? '$' + account.atrAmount.toLocaleString() : 'N/A'}</div>
+          <div style="border-top: 1px solid #444; margin-top: 6px; padding-top: 4px; font-size: 9px; color: #ccc;">
+            Click to select • Ctrl+click for multi-select
+          </div>
         `);
 
         tooltip.transition()
